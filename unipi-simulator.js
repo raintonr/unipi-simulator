@@ -9,6 +9,21 @@ server.listen(3030, function() { });
 /* Let's keep a list of clients to send all inputs to */
 var clients = [];
 
+/* Store the value of 8 relays */
+var minRelay = 1;
+var maxRelay = 8;
+var relays = [];
+
+/* Everything starts off */
+
+for (var lp = minRelay; lp <= maxRelay; lp++) {
+  relays[lp] = 0;
+}
+
+function dumpRelays() {
+  console.log('Relays: ' + relays.join(' | ') + ' |');
+}
+
 /*
  * WS server.
  */
@@ -21,6 +36,13 @@ new WebSocketServer({
 
   connection.on('message', function(message) {
     console.log('New message: ', message);
+    data = JSON.parse(message.utf8Data);
+    var dev = data.dev;
+    var circuit = data.circuit;
+    if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
+      relays[circuit] = data.value;
+      dumpRelays();
+    }
   });
 
   connection.on('close', function(connection) {
@@ -47,7 +69,7 @@ function sendInput(circuit, value) {
   });
 
   console.log("Sending: ", json);
-  for (var lp=0; lp < clients.length; lp++) {
+  for (var lp = 0; lp < clients.length; lp++) {
     clients[lp].sendUTF(json);
   }
 }
@@ -61,7 +83,7 @@ stdin.on('data', function( key ){
   console.log('Keypress: ', key);
   
   if (key >= 'a' && key <= 'n') {
-    var circuit = 1 + key.charCodeAt(0) - 97;
+    var circuit = minRelay + key.charCodeAt(0) - 97;
     /*
      * This siumlates an actor pressing a momentary switch and releasing
      * after 100ms.
