@@ -39,7 +39,7 @@ stdin.resume();
 stdin.setEncoding('utf8');
 
 function sendInput(circuit, value) {
-  /* Send input on/off to anyone listening */
+  /* Send circuit value to anyone listening */
   var json = JSON.stringify({
     "dev": "input",
     "circuit": circuit,
@@ -61,6 +61,18 @@ stdin.on('data', function( key ){
   console.log('Keypress: ', key);
   
   if (key >= 'a' && key <= 'n') {
-    sendInput(1 + key.charCodeAt(0) - 97, 1);
+    var circuit = 1 + key.charCodeAt(0) - 97;
+    /*
+     * This siumlates an actor pressing a momentary switch and releasing
+     * after 100ms.
+     * 
+     * Ideally Evok would only spit out a single 'click' event for this
+     * case because we don't want to have to rely on clients detecting
+     * very short 'on' periods.
+     */
+    sendInput(circuit, 1);
+    setTimeout(function(circuitOff){
+      sendInput(circuitOff, 0);
+    }, 100, circuit);
   }
 });
