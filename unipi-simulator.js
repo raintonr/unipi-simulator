@@ -2,7 +2,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var server = http.createServer(function(request, response) {
-    /* Don't do anything here, we're interested in WS only */
+  /* Don't do anything here, we're interested in WS only */
 });
 server.listen(3030, function() { });
 
@@ -13,20 +13,20 @@ var clients = [];
  * WS server.
  */
 new WebSocketServer({
-    httpServer: server
+  httpServer: server
 }).on('request', function(request) {
-    console.log('New connection from ', request.remoteAddress);
-    var connection = request.accept(null, request.origin);
-    clients.push(connection);
+  console.log('New connection from ', request.remoteAddress);
+  var connection = request.accept(null, request.origin);
+  clients.push(connection);
 
-    connection.on('message', function(message) {
-        console.log('New message: ', message);
-    });
+  connection.on('message', function(message) {
+    console.log('New message: ', message);
+  });
 
-    connection.on('close', function(connection) {
-        console.log('Closed connection');
-        /* TODO: remove the closed connection from our clients list */
-    });
+  connection.on('close', function(connection) {
+    console.log('Closed connection');
+    /* TODO: remove the closed connection from our clients list */
+  });
 });
 
 /*
@@ -38,6 +38,20 @@ stdin.setRawMode(true);
 stdin.resume();
 stdin.setEncoding('utf8');
 
+function sendInput(circuit, value) {
+  /* Send input on/off to anyone listening */
+  var json = JSON.stringify({
+    "dev": "input",
+    "circuit": circuit,
+    "value": value
+  });
+
+  console.log("Sending: ", json);
+  for (var lp=0; lp < clients.length; lp++) {
+    clients[lp].sendUTF(json);
+  }
+}
+
 stdin.on('data', function( key ){
   /* ctrl-c ( end of text ) */
   if (key === '\u0003') {
@@ -46,14 +60,7 @@ stdin.on('data', function( key ){
 
   console.log('Keypress: ', key);
   
-  /* Send input on/off to anyone listening */
-  var json = JSON.stringify({
-      "circuit": "1",
-      "value": "1",
-      "comment": "I have no idea what this message format is!"
-  });
-
-  for (var lp=0; lp < clients.length; lp++) {
-      clients[lp].sendUTF(json);
+  if (key >= 'a' && key <= 'n') {
+    sendInput(1 + key.charCodeAt(0) - 97, 1);
   }
 });
