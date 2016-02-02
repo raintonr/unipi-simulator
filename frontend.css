@@ -1,0 +1,11 @@
+.digital-input, .digital-output {
+  border: 1px solid black;
+  padding: 5px;
+  margin: 2px;
+  width: 25px;
+  display: inline-block;
+  text-align: center;
+}
+.digital-input.on, .digital-output.on {
+  background: red;
+}

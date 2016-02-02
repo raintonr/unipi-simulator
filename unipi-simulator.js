@@ -113,6 +113,7 @@ new WebSocketServer({
     /* Do our own primative display also */
     
     data = JSON.parse(message.utf8Data);
+    console.log('data: ', data);
     var dev = data.dev;
     var circuit = data.circuit;
     if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
