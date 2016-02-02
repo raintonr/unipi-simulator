@@ -4,8 +4,10 @@
   "description": "A simple node.js WS server to simulate the UniPi evok API",
   "main": "unipi-simulator.js",
   "dependencies": {
-    "websocket": "*",
-    "http": "*"
+    "fs": "*",
+    "http": "*",
+    "path": "*",
+    "websocket": "*"
   },
   "devDependencies": {},
   "scripts": {

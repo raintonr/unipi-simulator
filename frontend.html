@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>UniPi Simulator</title>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+  </head>
+<body>
+<script type="text/javascript">
+$(document).ready(function() {
+  if (!("WebSocket" in window)){
+    alert('No WS. Doh!');
+  } else {
+    connect();
+  }
+
+  function connect(){
+    try{
+      var socket;
+      var host = "ws://localhost:3031/ws";
+      var socket = new WebSocket(host);
+
+      console.log('Socket status: ' + socket.readyState);
+
+      socket.onopen = function(){
+        console.log('Socket open: ' + socket.readyState);
+      }
+
+      socket.onmessage = function(msg){
+        console.log('Socket message: ' + socket.readyState);
+      }
+
+      socket.onclose = function(){
+        console.log('Socket close: ' + socket.readyState);
+      }			
+    } catch(exception){
+   		 alert(exception);
+    }
+  }
+});
+</script>
+Hello!
+</body>
+</html>
