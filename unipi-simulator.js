@@ -66,13 +66,14 @@ new WebSocketServer({
   });
 });
 
-
 console.log("Connect to web interface at http://localhost:3031/");
 
 /* Evok server */
 
-var server = http.createServer(function(request, response) {
-  /* Don't do anything here, we're interested in WS only */
+var server = http.createServer(function(req, res) {
+  console.log('http request: ', req.url);
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('{"success": true}');
 });
 server.listen(3030, function() { });
 
@@ -104,21 +105,22 @@ new WebSocketServer({
 
   connection.on('message', function(message) {
     console.log('New message: ', message);
-    
-    /* Send all WS messages to the User clients for display */
-    for (var lp = 0; lp < userClients.length; lp++) {
-      userClients[lp].sendUTF(message.utf8Data);
-    }
-    
-    /* Do our own primative display also */
-    
-    data = JSON.parse(message.utf8Data);
-    console.log('data: ', data);
-    var dev = data.dev;
-    var circuit = data.circuit;
-    if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
-      relays[circuit] = data.value;
-      dumpRelays();
+    if (message.utf8Data && message.utf8Data.trim() != '') {
+
+      /* Send all WS messages to the User clients for display */
+      for (var lp = 0; lp < userClients.length; lp++) {
+        userClients[lp].sendUTF(message.utf8Data);
+      }
+      
+      /* Do our own primative display also */
+      data = JSON.parse(message.utf8Data);
+      console.log('data: ', data);
+      var dev = data.dev;
+      var circuit = data.circuit;
+      if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
+        relays[circuit] = data.value;
+        dumpRelays();
+      }
     }
   });
 
@@ -127,6 +129,8 @@ new WebSocketServer({
     /* TODO: remove the closed connection from our clients list */
   });
 });
+
+console.log("Connect to Evok device at ws://localhost:3030/");
 
 /*
  * Listen for keypress to simulate UniPi inputs
