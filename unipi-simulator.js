@@ -1,6 +1,7 @@
-var fs = require("fs");
+var fs = require('fs');
 var http = require('http');
-var path = require("path");
+var path = require('path');
+var qs = require('querystring');
 var WebSocketServer = require('websocket').server;
 
 /*
@@ -70,10 +71,34 @@ console.log("Connect to web interface at http://localhost:3031/");
 
 /* Evok server */
 
-var server = http.createServer(function(req, res) {
-  console.log('http request: ', req.url);
+function resSuccess(res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('{"success": true}');
+}
+
+var server = http.createServer(function(req, res) {
+  console.log('http request: ', req.url);
+  var parts = req.url.split('/');
+  var dev = parts[2];
+  var circuit = parts[3];
+  
+  if (req.method == 'POST') {
+    var body = '';
+
+    req.on('data', function (data) {
+      body += data;
+      req.on('end', function () {
+        var post = qs.parse(body);
+        handleWs({
+          'dev': dev,
+          'circuit': circuit,
+          'value': post.value
+        });
+        resSuccess(res);
+      });
+    });
+  }
+  resSuccess(res);
 });
 server.listen(3030, function() { });
 
@@ -96,6 +121,23 @@ function dumpRelays() {
  * WS server.
  */
  
+function handleWs(data) {
+  /* Send all WS messages to the User clients for display */
+  var dataOut = JSON.stringify(data);
+  for (var lp = 0; lp < userClients.length; lp++) {
+    userClients[lp].sendUTF(dataOut);
+  }
+
+  /* Do our own primative display also */
+  console.log('data: ', data);
+  var dev = data.dev;
+  var circuit = data.circuit;
+  if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
+    relays[circuit] = data.value;
+    dumpRelays();
+  }
+}
+ 
 new WebSocketServer({
   httpServer: server
 }).on('request', function(request) {
@@ -106,21 +148,7 @@ new WebSocketServer({
   connection.on('message', function(message) {
     console.log('New message: ', message);
     if (message.utf8Data && message.utf8Data.trim() != '') {
-
-      /* Send all WS messages to the User clients for display */
-      for (var lp = 0; lp < userClients.length; lp++) {
-        userClients[lp].sendUTF(message.utf8Data);
-      }
-      
-      /* Do our own primative display also */
-      data = JSON.parse(message.utf8Data);
-      console.log('data: ', data);
-      var dev = data.dev;
-      var circuit = data.circuit;
-      if (dev == 'relay' && circuit >= minRelay && circuit <= maxRelay) {
-        relays[circuit] = data.value;
-        dumpRelays();
-      }
+      handleWs(JSON.parse(message.utf8Data));
     }
   });
 

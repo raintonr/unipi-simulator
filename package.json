@@ -7,6 +7,7 @@
     "fs": "*",
     "http": "*",
     "path": "*",
+    "querystring": "*",
     "websocket": "*"
   },
   "devDependencies": {},
